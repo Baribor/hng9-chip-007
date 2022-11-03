@@ -7,7 +7,7 @@ After that, to run the script, you run the command below:
 
 `python worker.py`
 
-This assumes you have python installed and properly setup on your devices.
+This assumes you have python installed and properly setup on your device.
 
 ## PROJECT STRUCTURE
 The [input files](input%20files) folder serves as a folder to put all csv files to be processed. Currently only a file - [Team Bevel.csv](input%20files/Team%20Bevel.csv) is there.

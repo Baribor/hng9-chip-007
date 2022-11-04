@@ -10,7 +10,8 @@ SHEET_NAME = 'Sheet1'
 
 url = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}'
 
-hashes = {}
+
+rows = []
 
 def download_csv():
     print("Downloading data...")
@@ -19,6 +20,8 @@ def download_csv():
     with open('data.csv', 'w') as file:
         file.write(response.content.decode('utf-8'))
     print('Done')
+    
+    generate_json()
     
 
 def generate_json():
@@ -32,13 +35,16 @@ def generate_json():
         
     
         for line,row in enumerate(csv_reader):
-            team, sn, filename, name, description, gender, attributes, _ = row[:8]
+            row = row[:8]
+            team, sn, filename, name, description, gender, attributes, _ = row
             
             if line== 0:
               
                 print(f'HEADERS:  {", ".join([x for i,x in enumerate(row) if i<8])}')
                 print()
                 print('Starting CHIP-007 json creation...')
+                row.append('Hash')
+                rows.append(row)
                 
             else:
                 if team:
@@ -76,20 +82,15 @@ def generate_json():
                     item['attributes'].append({'trait_type': att[0].strip(), 'value':att[1].strip()})
                 
                 with open(f'jsons/{filename}.json', 'w') as jf:
-                    jf.write(json.dumps(item, indent=4))
-                    
+                    data = json.dumps(item, indent=4)
+                    data_hash = hashlib.sha256(data.encode()).hexdigest()
+                    row.append(data_hash)
+                    rows.append(row)
+                    jf.write(data)
+                            
     print('Done')
+    generate_output()
                     
-                    
-        
-                
-                
-def generate_hash():
-    print('Starting sha256 hashing...')
-    for f in os.listdir('jsons'):
-         with open(f'jsons/{f}', 'rb') as jf:
-                hashes['.'.join(f.split('.')[:-1])] = hashlib.sha256(jf.read()).hexdigest()
-    print('Done')
 
                         
 
@@ -99,23 +100,13 @@ def generate_output():
         os.mkdir('output')
         
     
-    with open('data.csv', 'r') as read_file, open('output/data.output.csv', 'w') as write_file:
-          cr = csv.reader(read_file)
+    with open('output/data.output.csv', 'w') as write_file:
           cw = csv.writer(write_file)
-          
-          for line, data in enumerate(cr):
-                row = data[:8]
-                if line==0:
-                    row.append('Hash')
-                else:
-                    row.append(hashes[row[2]])
-                cw.writerow(row)
+          cw.writerows(rows)
     print('Done')
                 
 
 
 if __name__=='__main__':
     download_csv()
-    generate_json()
-    generate_hash()
-    generate_output()
+   
